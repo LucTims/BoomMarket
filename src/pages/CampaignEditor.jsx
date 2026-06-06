@@ -119,9 +119,8 @@ export default function CampaignEditor() {
     setSendingStatus('sending');
     setSendLogs([]);
     
-    // Sélectionner un échantillon ou tout envoyer
-    // Pour des raisons de performance dans le navigateur et de sécurité, nous limitons à 5 envois réels ou simulons le reste en bloc
-    const totalToSend = Math.min(clients.length, 10); // Envoi réel/simulé détaillé sur 10 clients max pour le retour visuel
+    // Envoi à la totalité des clients de la cohorte
+    const totalToSend = clients.length;
     setSendProgress({ current: 0, total: targetCount, success: 0, failure: 0 });
 
     let successCount = 0;
@@ -189,19 +188,7 @@ export default function CampaignEditor() {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Le reste des clients du segment est marqué comme traité en simulation globale
-    if (targetCount > totalToSend) {
-      const remaining = targetCount - totalToSend;
-      successCount += remaining;
-      logs.push({
-        id: 'bulk-remaining',
-        name: `${remaining} autres clients du segment`,
-        contact: 'Bulk',
-        status: 'success',
-        msg: 'Traité en tâche de fond (Simulation globale)'
-      });
-      setSendLogs([...logs]);
-    }
+
 
     setSendProgress({
       current: targetCount,
