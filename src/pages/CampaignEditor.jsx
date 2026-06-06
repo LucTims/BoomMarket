@@ -155,21 +155,23 @@ export default function CampaignEditor() {
 
         // Mettre à jour : incrémenter l'étape de séquence dans Supabase
         if (client.chariow_id) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('clients')
             .update({ 
               date_dernier_contact: new Date().toISOString(),
               [`step_${channel}`]: (client[`step_${channel}`] || client.sequence_step || 1) + 1
             })
             .eq('chariow_id', client.chariow_id);
+          if (updateError) console.error("Erreur mise à jour DB (chariow_id):", updateError);
         } else if (client.id) {
-          await supabase
+          const { error: updateError2 } = await supabase
             .from('clients')
             .update({ 
               date_dernier_contact: new Date().toISOString(),
               [`step_${channel}`]: (client[`step_${channel}`] || client.sequence_step || 1) + 1
             })
             .eq('id', client.id);
+          if (updateError2) console.error("Erreur mise à jour DB (id):", updateError2);
         }
 
       } else {
