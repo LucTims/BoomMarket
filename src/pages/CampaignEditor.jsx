@@ -190,6 +190,21 @@ export default function CampaignEditor() {
 
 
 
+    // Enregistrer l'historique de la campagne
+    try {
+      await supabase.from('campaign_history').insert({
+        campaign_name: campaignName || `Campagne ${channel}`,
+        segment: segment,
+        channel: channel,
+        target_count: targetCount,
+        success_count: successCount,
+        message_body: message,
+        subject: channel === 'email' ? subject : null
+      });
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde de l\'historique', err);
+    }
+
     setSendProgress({
       current: targetCount,
       total: targetCount,
@@ -245,6 +260,20 @@ export default function CampaignEditor() {
         status: 'success',
         msg: result.simulated ? 'Simulé' : 'Test Envoyé avec succès !'
       }]);
+      
+      try {
+        await supabase.from('campaign_history').insert({
+          campaign_name: `[TEST] ${campaignName || 'Campagne'}`,
+          segment: 'Test Interne',
+          channel: channel,
+          target_count: 1,
+          success_count: 1,
+          message_body: message,
+          subject: channel === 'email' ? subject : null
+        });
+      } catch (err) {
+        console.error('Erreur lors de la sauvegarde de l\'historique test', err);
+      }
     } else {
       setSendProgress({ current: 1, total: 1, success: 0, failure: 1 });
       setSendLogs([{
