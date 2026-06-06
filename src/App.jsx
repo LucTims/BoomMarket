@@ -15,7 +15,7 @@ function App() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <span className="text-gradient">BoomBooks</span>
+          <span className="text-gradient">BoomMarket</span>
         </div>
         
         <nav className="sidebar-nav">
