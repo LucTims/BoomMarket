@@ -69,18 +69,12 @@ export const sendBrevoEmail = async (client, subject, htmlContent) => {
         ],
         subject: subject,
         htmlContent: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
-            <div style="text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 20px;">
-              <h2 style="color: #2563eb; margin: 0;">BoomBooks</h2>
-              <span style="font-size: 0.8rem; color: #666; font-style: italic;">L'antidote de l'ignorance</span>
-            </div>
-            <div>
-              ${finalHtml}
-            </div>
-            <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.8rem; color: #777; text-align: center;">
-              BoomBooks Douala, Cameroun. <br/>
-              Pour toute question, contactez-nous sur WhatsApp.
-            </div>
+          <div style="font-family: sans-serif; font-size: 15px; line-height: 1.5; color: #000;">
+            ${finalHtml}
+            <br/><br/>
+            --<br/>
+            <b>L'équipe BoomBooks</b><br/>
+            <i>L'antidote de l'ignorance</i>
           </div>
         `
       })
