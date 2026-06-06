@@ -306,7 +306,10 @@ export const syncChariowToSupabase = async (onProgress) => {
             statut: statut,
             total_achats: 1,
             valeur_totale: 655,
-            sequence_step: 1
+            sequence_step: 1,
+            step_email: 1,
+            step_whatsapp: 1,
+            step_sms: 1
           };
         }).filter(Boolean); // Filtrer les nulls
 
@@ -368,7 +371,10 @@ export const syncChariowToSupabase = async (onProgress) => {
           statut: 'actif',
           total_achats: 1,
           valeur_totale: 655,
-          sequence_step: 1
+          sequence_step: 1,
+          step_email: 1,
+          step_whatsapp: 1,
+          step_sms: 1
         });
       }
 

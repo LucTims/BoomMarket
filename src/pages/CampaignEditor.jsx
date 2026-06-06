@@ -22,7 +22,7 @@ export default function CampaignEditor() {
   const [campaignName, setCampaignName] = useState(() => templateFromState?.name || '');
   const [segment, setSegment] = useState(() => location.state?.targetDate || generatedDates[0]);
   const [sequenceStep, setSequenceStep] = useState(() => location.state?.targetStep || 1);
-  const [channel, setChannel] = useState(() => templateFromState?.channel || 'email');
+  const [channel, setChannel] = useState(() => location.state?.channel || templateFromState?.channel || 'email');
   const [subject, setSubject] = useState(() => templateFromState?.subject || '');
   const [message, setMessage] = useState(() => templateFromState?.body || '');
   
@@ -51,7 +51,7 @@ export default function CampaignEditor() {
           .from('clients')
           .select('*')
           .gte('date_premier_achat', fourteenDaysAgo.toISOString()) // Seulement les 15 derniers jours
-          .eq('sequence_step', sequenceStep); // FILTRER PAR ÉTAPE DE SÉQUENCE
+          .eq(`step_${channel}`, sequenceStep); // FILTRER PAR ÉTAPE DU CANAL SPÉCIFIQUE
         
         const { data, error } = await query;
         if (error) throw error;
@@ -160,7 +160,7 @@ export default function CampaignEditor() {
             .from('clients')
             .update({ 
               date_dernier_contact: new Date().toISOString(),
-              sequence_step: (client.sequence_step || 1) + 1
+              [`step_${channel}`]: (client[`step_${channel}`] || client.sequence_step || 1) + 1
             })
             .eq('chariow_id', client.chariow_id);
         } else if (client.id) {
@@ -168,7 +168,7 @@ export default function CampaignEditor() {
             .from('clients')
             .update({ 
               date_dernier_contact: new Date().toISOString(),
-              sequence_step: (client.sequence_step || 1) + 1
+              [`step_${channel}`]: (client[`step_${channel}`] || client.sequence_step || 1) + 1
             })
             .eq('id', client.id);
         }

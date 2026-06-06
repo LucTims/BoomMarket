@@ -13,6 +13,7 @@ export default function Dashboard() {
   });
   const [cohorts, setCohorts] = useState([]);
   const [selectedStep, setSelectedStep] = useState(1);
+  const [selectedChannel, setSelectedChannel] = useState('email');
   const [maxStep, setMaxStep] = useState(1);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -51,8 +52,8 @@ export default function Dashboard() {
             const cDd = String(cd.getDate()).padStart(2, '0');
             return `${cYyyy}-${cMm}-${cDd}` === localIsoDate;
           });
-          const atStep = dayClients.filter(c => (c.sequence_step || 1) === selectedStep).length;
-          const pastStep = dayClients.filter(c => (c.sequence_step || 1) > selectedStep).length;
+          const atStep = dayClients.filter(c => (c[`step_${selectedChannel}`] || c.sequence_step || 1) === selectedStep).length;
+          const pastStep = dayClients.filter(c => (c[`step_${selectedChannel}`] || c.sequence_step || 1) > selectedStep).length;
           
           generatedCohorts.push({
             date: displayDate,
@@ -64,8 +65,8 @@ export default function Dashboard() {
         }
         setCohorts(generatedCohorts);
 
-        // Calculer l'étape maximale existante
-        const steps = data.map(c => c.sequence_step || 1);
+        // Calculer l'étape maximale existante pour ce canal
+        const steps = data.map(c => c[`step_${selectedChannel}`] || c.sequence_step || 1);
         const computedMax = steps.length > 0 ? Math.max(...steps) : 1;
         setMaxStep(Math.max(computedMax, 3)); // Au minimum 3 étapes affichées
       }
@@ -97,7 +98,7 @@ export default function Dashboard() {
       fetchRealStats();
     }, 0);
     return () => clearTimeout(timer);
-  }, [selectedStep]);
+  }, [selectedStep, selectedChannel]);
 
   // Distribution géographique du briefing
   const geographicDistribution = [
@@ -208,8 +209,21 @@ export default function Dashboard() {
                 <Users size={20} color="var(--primary)" />
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Flux des 15 Derniers Jours</h2>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Étape :</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Canal :</span>
+                  <select 
+                    value={selectedChannel} 
+                    onChange={(e) => setSelectedChannel(e.target.value)}
+                    style={{ padding: '0.3rem 0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+                  >
+                    <option value="email">Email</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="sms">SMS</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Étape :</span>
                 {Array.from({ length: maxStep }, (_, i) => i + 1).map(step => (
                   <button 
                     key={step} 
@@ -220,6 +234,7 @@ export default function Dashboard() {
                     {step}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
             
@@ -258,7 +273,7 @@ export default function Dashboard() {
                         {cohort.atStep > 0 ? (
                           <Link 
                             to="/campaigns/new" 
-                            state={{ targetDate: cohort.date, targetIso: cohort.isoDate, targetStep: selectedStep }}
+                            state={{ targetDate: cohort.date, targetIso: cohort.isoDate, targetStep: selectedStep, channel: selectedChannel }}
                             className="btn btn-primary" 
                             style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', textDecoration: 'none' }}
                           >
