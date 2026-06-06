@@ -59,7 +59,7 @@ export const sendBrevoEmail = async (client, subject, htmlContent) => {
       body: JSON.stringify({
         sender: {
           name: 'BoomBooks',
-          email: 'www.martau@gmail.com'
+          email: 'contact@boombooks.shop'
         },
         to: [
           {
