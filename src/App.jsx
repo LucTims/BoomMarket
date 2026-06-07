@@ -1,11 +1,12 @@
 import { Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Megaphone, CalendarDays, History, Library, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, Users, Megaphone, CalendarDays, History, Library, Settings as SettingsIcon, MessageSquare } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
 import CampaignEditor from './pages/CampaignEditor';
 import Calendar from './pages/Calendar';
 import HistoryPage from './pages/HistoryPage';
 import Templates from './pages/Templates';
+import DirectMessage from './pages/DirectMessage';
 import Settings from './pages/Settings';
 import './App.css';
 
@@ -37,6 +38,9 @@ function App() {
           <NavLink to="/templates" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <Library size={20} /> Templates de messages
           </NavLink>
+          <NavLink to="/direct-message" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MessageSquare size={20} /> Message direct
+          </NavLink>
           <NavLink to="/settings" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <SettingsIcon size={20} /> Paramètres
           </NavLink>
@@ -52,6 +56,7 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/templates" element={<Templates />} />
+          <Route path="/direct-message" element={<DirectMessage />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
