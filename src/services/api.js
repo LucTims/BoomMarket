@@ -318,7 +318,7 @@ export const syncChariowToSupabase = async (onProgress) => {
 
           const { error } = await supabase
             .from('clients')
-            .upsert(rows, { onConflict: 'chariow_id' });
+            .upsert(rows, { onConflict: 'chariow_id', ignoreDuplicates: true });
 
         if (error) {
           throw new Error(`Erreur d'insertion Supabase: ${error.message}`);
@@ -381,7 +381,7 @@ export const syncChariowToSupabase = async (onProgress) => {
       try {
         const { error: upsertErr } = await supabase
           .from('clients')
-          .upsert(mockRows, { onConflict: 'chariow_id' });
+          .upsert(mockRows, { onConflict: 'chariow_id', ignoreDuplicates: true });
 
         if (upsertErr) {
           throw upsertErr;
