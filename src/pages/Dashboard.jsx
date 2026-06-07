@@ -19,33 +19,50 @@ export default function Dashboard() {
 
   const fetchRealStats = async () => {
     try {
-      const fourteenDaysAgo = new Date();
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 15);
+      const startDate = new Date('2026-05-23T00:00:00');
 
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .gte('date_premier_achat', fourteenDaysAgo.toISOString());
+      // Pagination Supabase (max 1000 lignes par requête)
+      let allData = [];
+      let from = 0;
+      const pageSize = 1000;
+      let keepGoing = true;
+      while (keepGoing) {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .gte('date_premier_achat', startDate.toISOString())
+          .range(from, from + pageSize - 1);
+        if (error) { console.error('Erreur fetch:', error); break; }
+        if (data && data.length > 0) {
+          allData = allData.concat(data);
+          from += pageSize;
+          if (data.length < pageSize) keepGoing = false;
+        } else { keepGoing = false; }
+      }
       
-      if (!error && data) {
-        const total = data.length;
+      if (allData.length > 0) {
+        const total = allData.length;
         const active = total;
         const inactive = 0;
-        const retention = 100; // Puisqu'on ne prend que les récents, 100% de la cible 14 jours est "active"
+        const retention = 100;
         setStats({ total, inactive, active, retention });
 
+        // Calculer le nombre de jours entre le 23/05 et aujourd'hui
+        const today = new Date();
+        const diffMs = today - startDate;
+        const totalDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
         const generatedCohorts = [];
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < totalDays; i++) {
           const d = new Date();
           d.setDate(d.getDate() - i);
-          // Formatage robuste YYYY-MM-DD basé sur le temps local
           const yyyy = d.getFullYear();
           const mm = String(d.getMonth() + 1).padStart(2, '0');
           const dd = String(d.getDate()).padStart(2, '0');
           const localIsoDate = `${yyyy}-${mm}-${dd}`;
-          const displayDate = `${dd}/${mm}/${yyyy}`; // Format européen pour l'affichage
+          const displayDate = `${dd}/${mm}/${yyyy}`;
           
-          const dayClients = data.filter(c => {
+          const dayClients = allData.filter(c => {
             const cd = new Date(c.date_premier_achat);
             const cYyyy = cd.getFullYear();
             const cMm = String(cd.getMonth() + 1).padStart(2, '0');
@@ -65,10 +82,9 @@ export default function Dashboard() {
         }
         setCohorts(generatedCohorts);
 
-        // Calculer l'étape maximale existante pour ce canal
-        const steps = data.map(c => c[`step_${selectedChannel}`] || c.sequence_step || 1);
+        const steps = allData.map(c => c[`step_${selectedChannel}`] || c.sequence_step || 1);
         const computedMax = steps.length > 0 ? Math.max(...steps) : 1;
-        setMaxStep(Math.max(computedMax, 3)); // Au minimum 3 étapes affichées
+        setMaxStep(Math.max(computedMax, 3));
       }
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques réelles :', error);
@@ -81,13 +97,13 @@ export default function Dashboard() {
       setIsSyncing(true);
       try {
         await syncChariowToSupabase();
-        // Une fois la synchro terminée, on rafraîchit les stats
-        fetchRealStats();
       } catch (error) {
         console.error('Erreur de synchro auto:', error);
       } finally {
         setIsSyncing(false);
       }
+      // Toujours charger les clients, même si la synchro échoue
+      fetchRealStats();
     };
     
     autoSync();
@@ -207,7 +223,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid var(--sidebar-border)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Users size={20} color="var(--primary)" />
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Flux des 15 Derniers Jours</h2>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Cohortes Clients (depuis le 23/05)</h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

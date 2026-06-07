@@ -8,9 +8,12 @@ export default function CampaignEditor() {
   const location = useLocation();
   const templateFromState = location.state?.template;
 
-  // Générer les 15 dernières dates pour le dropdown
+  // Générer les dates depuis le 23/05/2026 jusqu'à aujourd'hui
   const generatedDates = [];
-  for (let i = 0; i < 15; i++) {
+  const startDate = new Date('2026-05-23');
+  const todayDate = new Date();
+  const totalDays = Math.ceil((todayDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+  for (let i = 0; i < totalDays; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dd = String(d.getDate()).padStart(2, '0');
@@ -44,13 +47,10 @@ export default function CampaignEditor() {
     const fetchTargetClients = async () => {
       setLoadingClients(true);
       try {
-        const fourteenDaysAgo = new Date();
-        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 15);
-
         let query = supabase
           .from('clients')
           .select('*')
-          .gte('date_premier_achat', fourteenDaysAgo.toISOString()) // Seulement les 15 derniers jours
+          .gte('date_premier_achat', new Date('2026-05-23').toISOString()) // Depuis le 23/05
           .eq(`step_${channel}`, sequenceStep); // FILTRER PAR ÉTAPE DU CANAL SPÉCIFIQUE
         
         const { data, error } = await query;
