@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/brevo/(.*)",
+      "destination": "https://api.brevo.com/$1"
+    },
+    {
+      "source": "/api/chariow/(.*)",
+      "destination": "https://api.chariow.com/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
