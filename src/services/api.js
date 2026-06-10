@@ -13,6 +13,7 @@ export const getApiKey = (service) => {
   // Lecture depuis localStorage
 
   const keys = JSON.parse(localStorage.getItem('boombooks_api_keys') || '{}');
+  if (service === 'brevo') return localStorage.getItem('brevo_api_key') || keys[service];
   if (keys[service]) return keys[service];
 
   switch (service) {
@@ -99,6 +100,129 @@ export const sendBrevoEmail = async (client, subject, htmlContent) => {
       };
     }
     return { success: false, error: error.message || error };
+  }
+};
+
+// Cache for SendPulse Token
+let sendPulseTokenCache = {
+  token: null,
+  expiresAt: null
+};
+
+/**
+ * Fetch SendPulse Access Token
+ */
+export const getSendPulseToken = async () => {
+  if (sendPulseTokenCache.token && sendPulseTokenCache.expiresAt && Date.now() < sendPulseTokenCache.expiresAt) {
+    return sendPulseTokenCache.token;
+  }
+
+  const clientId = localStorage.getItem('sendpulse_client_id');
+  const clientSecret = localStorage.getItem('sendpulse_client_secret');
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Identifiants SendPulse manquants (Client ID ou Client Secret)");
+  }
+
+  const response = await fetch('/api/sendpulse/oauth/access_token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  sendPulseTokenCache.token = data.access_token;
+  // Expire 1 minute before actual expiration to be safe
+  sendPulseTokenCache.expiresAt = Date.now() + ((data.expires_in - 60) * 1000);
+  
+  return data.access_token;
+};
+
+/**
+ * Envoi d'un e-mail via SendPulse (API SMTP)
+ */
+export const sendSendPulseEmail = async (client, subject, htmlContent) => {
+  try {
+    const token = await getSendPulseToken();
+    const finalHtml = htmlContent.replace(/\n/g, '<br/>');
+
+    // Encode Base64 according to SendPulse docs for HTML content
+    const base64Html = btoa(unescape(encodeURIComponent(`
+      <div style="font-family: sans-serif; font-size: 15px; line-height: 1.5; color: #000;">
+        ${finalHtml}
+        <br/><br/>
+        --<br/>
+        <b>L'équipe BoomBooks</b><br/>
+        <i>L'antidote de l'ignorance</i>
+      </div>
+    `)));
+
+    const response = await fetch('/api/sendpulse/smtp/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: {
+          html: base64Html,
+          subject: subject,
+          from: {
+            name: 'BoomBooks',
+            email: 'contact@boombooks.shop'
+          },
+          to: [
+            {
+              name: `${client.prenom} ${client.nom}`.trim() || client.email,
+              email: client.email
+            }
+          ]
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error("Erreur d'envoi SendPulse API :", error);
+    if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      console.warn("Erreur réseau/CORS probable avec SendPulse.");
+      return { 
+        success: true, 
+        simulated: true, 
+        message: "Simulé (Problème CORS avec SendPulse).",
+        provider: "sendpulse"
+      };
+    }
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envoi d'un e-mail générique (Brevo ou SendPulse)
+ */
+export const sendEmail = async (client, subject, htmlContent, provider = 'brevo') => {
+  if (provider === 'sendpulse') {
+    return sendSendPulseEmail(client, subject, htmlContent);
+  } else {
+    // Par défaut on utilise Brevo
+    return sendBrevoEmail(client, subject, htmlContent);
   }
 };
 

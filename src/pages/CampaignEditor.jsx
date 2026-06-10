@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Send, Eye, ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { sendBrevoEmail, sendWhatsAppMake, sendSMS, parseMessage } from '../services/api';
+import { sendEmail, sendWhatsAppMake, sendSMS, parseMessage } from '../services/api';
 
 export default function CampaignEditor() {
   const location = useLocation();
@@ -26,6 +26,7 @@ export default function CampaignEditor() {
   const [segment, setSegment] = useState(() => location.state?.targetDate || generatedDates[0]);
   const [sequenceStep, setSequenceStep] = useState(() => location.state?.targetStep || 1);
   const [channel, setChannel] = useState(() => location.state?.channel || templateFromState?.channel || 'email');
+  const [emailProvider, setEmailProvider] = useState('brevo');
   const [subject, setSubject] = useState(() => templateFromState?.subject || '');
   const [message, setMessage] = useState(() => templateFromState?.body || '');
   
@@ -136,7 +137,7 @@ export default function CampaignEditor() {
       let result = { success: false };
       
       if (channel === 'email') {
-        result = await sendBrevoEmail(client, subject, parsedMessageText);
+        result = await sendEmail(client, subject, parsedMessageText, emailProvider);
       } else if (channel === 'whatsapp') {
         result = await sendWhatsAppMake(client, parsedMessageText);
       } else if (channel === 'sms') {
@@ -246,7 +247,7 @@ export default function CampaignEditor() {
     let result = { success: false };
 
     if (channel === 'email') {
-      result = await sendBrevoEmail(dummyClient, subject, parsedMessageText);
+      result = await sendEmail(dummyClient, subject, parsedMessageText, emailProvider);
     } else if (channel === 'whatsapp') {
       result = await sendWhatsAppMake(dummyClient, parsedMessageText);
     } else if (channel === 'sms') {
@@ -403,11 +404,27 @@ export default function CampaignEditor() {
                 onChange={(e) => setChannel(e.target.value)} 
                 className="form-input"
               >
-                <option value="email">Email (Brevo SMTP)</option>
-                <option value="whatsapp">WhatsApp (Make / Wachap)</option>
-                <option value="sms">SMS (Wachap)</option>
+                <option value="email">E-mail</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="sms">SMS</option>
               </select>
             </div>
+            
+            {channel === 'email' && (
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
+                  Fournisseur d'envoi
+                </label>
+                <select 
+                  value={emailProvider} 
+                  onChange={(e) => setEmailProvider(e.target.value)} 
+                  className="form-input"
+                >
+                  <option value="brevo">Brevo (Défaut)</option>
+                  <option value="sendpulse">SendPulse</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {channel === 'email' && (

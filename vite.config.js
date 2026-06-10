@@ -11,6 +11,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/brevo/, '')
       },
+      '/api/sendpulse': {
+        target: 'https://api.sendpulse.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/sendpulse/, '')
+      },
       '/api/chariow': {
         target: 'https://api.chariow.com',
         changeOrigin: true,

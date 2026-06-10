@@ -1,5 +1,8 @@
-import { Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Megaphone, CalendarDays, History, Library, Settings as SettingsIcon, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Megaphone, CalendarDays, History, Library, Settings as SettingsIcon, MessageSquare, LogOut } from 'lucide-react';
+import { supabase } from './supabaseClient';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
 import CampaignEditor from './pages/CampaignEditor';
@@ -11,6 +14,38 @@ import Settings from './pages/Settings';
 import './App.css';
 
 function App() {
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoadingSession(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
+  if (loadingSession) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)' }}>Chargement...</div>;
+  }
+
+  if (!session) {
+    return <Login onLoginSuccess={setSession} />;
+  }
+
   return (
     <div className="app-container">
       {/* Sidebar */}
@@ -45,6 +80,22 @@ function App() {
             <SettingsIcon size={20} /> Paramètres
           </NavLink>
         </nav>
+
+        <div style={{ padding: '1rem', borderTop: '1px solid var(--sidebar-border)', marginTop: 'auto' }}>
+          <button 
+            onClick={handleLogout}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', 
+              padding: '0.75rem 1rem', background: 'transparent', border: 'none', 
+              color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '0.5rem',
+              transition: 'all 0.2s ease', fontWeight: 500
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+          >
+            <LogOut size={20} /> Déconnexion
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}

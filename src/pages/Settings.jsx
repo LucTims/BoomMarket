@@ -10,6 +10,9 @@ export default function Settings() {
     chariow: getApiKey('chariow')
   }));
   
+  const [sendpulseClientId, setSendpulseClientId] = useState(() => localStorage.getItem('sendpulse_client_id') || '');
+  const [sendpulseClientSecret, setSendpulseClientSecret] = useState(() => localStorage.getItem('sendpulse_client_secret') || '');
+  
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [syncStatus, setSyncStatus] = useState({
     status: 'idle', // idle, fetching, saving, completed, error, cors_fallback
@@ -27,6 +30,8 @@ export default function Settings() {
   const handleSave = (e) => {
     e.preventDefault();
     localStorage.setItem('boombooks_api_keys', JSON.stringify(keys));
+    localStorage.setItem('sendpulse_client_id', sendpulseClientId);
+    localStorage.setItem('sendpulse_client_secret', sendpulseClientSecret);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
@@ -162,6 +167,37 @@ export default function Settings() {
               />
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
                 Pour récupérer vos clients et ventes de boombooks.shop en temps réel.
+              </span>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
+                Client ID (SendPulse)
+              </label>
+              <input 
+                type="password" 
+                value={sendpulseClientId} 
+                onChange={(e) => setSendpulseClientId(e.target.value)} 
+                className="form-input" 
+                placeholder="ID de l'API SendPulse" 
+                style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
+                Client Secret (SendPulse)
+              </label>
+              <input 
+                type="password" 
+                value={sendpulseClientSecret} 
+                onChange={(e) => setSendpulseClientSecret(e.target.value)} 
+                className="form-input" 
+                placeholder="Secret de l'API SendPulse" 
+                style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                Vos identifiants d'API SendPulse pour le routage alternatif d'e-mails.
               </span>
             </div>
 
