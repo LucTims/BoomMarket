@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, RefreshCw } from 'lucide-react';
+import { syncChariowToSupabase } from '../services/api';
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSegmentModal, setShowSegmentModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleManualSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      await syncChariowToSupabase();
+    } catch (error) {
+      console.error('Erreur de synchro manuelle:', error);
+    } finally {
+      setIsSyncing(false);
+      fetchClients();
+    }
+  };
 
   const fetchClients = async () => {
     const fourteenDaysAgo = new Date();
@@ -44,7 +59,18 @@ export default function Clients() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 className="text-gradient" style={{ fontSize: '2rem' }}>Liste des clients</h1>
-        <button className="btn btn-primary" onClick={() => setShowSegmentModal(true)}>Créer un segment</button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {isSyncing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
+              <span className="spin" style={{ display: 'inline-block' }}>🔄</span> Synchro...
+            </div>
+          ) : (
+            <button className="btn btn-outline" onClick={handleManualSync} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <RefreshCw size={16} /> Synchroniser
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={() => setShowSegmentModal(true)}>Créer un segment</button>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}

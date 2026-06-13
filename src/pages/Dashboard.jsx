@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Users, Target, DollarSign, TrendingUp, MapPin, BookOpen, ArrowRight } from 'lucide-react';
+import { Users, Target, DollarSign, TrendingUp, MapPin, BookOpen, ArrowRight, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { syncChariowToSupabase } from '../services/api';
 
@@ -91,6 +91,20 @@ export default function Dashboard() {
     }
   };
 
+  // Fonction de synchronisation manuelle
+  const handleManualSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      await syncChariowToSupabase();
+    } catch (error) {
+      console.error('Erreur de synchro manuelle:', error);
+    } finally {
+      setIsSyncing(false);
+      fetchRealStats();
+    }
+  };
+
   // Synchronisation automatique au chargement
   useEffect(() => {
     const autoSync = async () => {
@@ -138,11 +152,17 @@ export default function Dashboard() {
             "L'antidote de l'ignorance." — Pôle Service Client & CRM
           </p>
         </div>
-        {isSyncing && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
-            <span className="spin" style={{ display: 'inline-block' }}>🔄</span> Synchronisation en cours...
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {isSyncing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary-light)', color: 'var(--primary)', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
+              <span className="spin" style={{ display: 'inline-block' }}>🔄</span> Synchronisation en cours...
+            </div>
+          ) : (
+            <button className="btn btn-outline" onClick={handleManualSync} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <RefreshCw size={16} /> Synchroniser Chariow
+            </button>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards Grid */}
